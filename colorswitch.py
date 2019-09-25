@@ -55,7 +55,6 @@ def chane_xfce4_terminal_colorscheme(colorscheme):
         term_conf.write(f, space_around_delimiters=False)
 
     shutil.move(rc_temp, rc_file)
-    time.sleep(0.5)
 
     # compare foreground and background brightness
     foreground = hex_to_rgb(term_conf['Configuration']['ColorForeground'])
@@ -66,7 +65,28 @@ def chane_xfce4_terminal_colorscheme(colorscheme):
         bg_brightness = 'light'
     return bg_brightness
 
+def change_taskwarrior_colorscheme(colorscheme):
+    """changes colorscheme of taskwarrior
+    ~/.taskrc-colorscheme must be included in .taskrc"""
+
+    os_file = f"/usr/share/doc/task/rc/{colorscheme}.theme"
+    taskrc_colorscheme_file = os.path.expanduser("~/.taskrc-colorscheme")
+
+    # check if scheme is available
+    if not os.path.isfile(os_file):
+        raise ValueError(f"file {os_file} not found")
+
+    with open(taskrc_colorscheme_file, 'w') as f:
+        f.write(f"include {os_file}\n")
 
 if __name__ == '__main__':
     args = parser.parse_args()
     bg_brightness = chane_xfce4_terminal_colorscheme(args.colorscheme)
+
+    if bg_brightness == 'light':
+        task_colorscheme = 'light-256'
+    elif bg_brightness == 'dark':
+        task_colorscheme = 'dark-256'
+    change_taskwarrior_colorscheme(task_colorscheme)
+
+    time.sleep(0.2)
