@@ -7,24 +7,45 @@ import shutil
 import tempfile
 import time
 
-DESCRIPTION = """Change the xfce4-terminal colorscheme"""
-
-parser = argparse.ArgumentParser(description=DESCRIPTION)
-parser.add_argument('colorscheme', type=str,
-                    help='a xfce4-terminal colorscheme')
+DESCRIPTION = """Change the theme of xfce4 and xfce4-terminal, and taskwarrior"""
 
 
-def hex_to_rgb(hex):
-    hex = hex.lstrip('#')
-    if len(hex) != 6:
-        raise ValueError("Can only deal with colors in form #XXXXXX")
-    return tuple(int(hex[2*i:2*i+2], 16) for i in range(3))
+def run():
+    parser = argparse.ArgumentParser(description=DESCRIPTION)
+    parser.add_argument('brightness', type=str,
+                        choices=['dark', 'light'],
+                        help='choose how the desktop should look like')
+
+    # set themes
+    args = parser.parse_args()
+    if args.brightness == 'light':
+        xfce4_terminal_colorscheme = 'marv-light'
+        task_theme = 'light-256'
+        xfce4_style = 'Adwaita'
+    elif args.brightness == 'dark':
+        xfce4_terminal_colorscheme = 'marv-dark'
+        task_theme = 'dark-256'
+        xfce4_style = 'Adwaita-dark'
+
+    # change xfce4 style
+    change_xfce4_style(xfce4_style)
+
+    # change xfce4-terminal colorscheme
+    change_xfce4_terminal_colorscheme(xfce4_terminal_colorscheme)
+
+    # change taskwarrior theme
+    change_taskwarrior_theme(task_theme)
+
+    time.sleep(0.2)
 
 
-def chane_xfce4_terminal_colorscheme(colorscheme):
-    """changes colorscheme and returns bg_brightness
-    bg_brightness is 'dark' or 'light'"""
+def change_xfce4_style(style):
+    """changes xfce4 style"""
+    # does not work with subprocess.run() for some reason
+    os.system("xfconf-query -c xsettings -p /Net/ThemeName -s '{}'".format(style))
 
+
+def change_xfce4_terminal_colorscheme(colorscheme):
     os_file = f"/usr/share/xfce4/terminal/colorschemes/{colorscheme}.theme"
     user_file = os.path.expanduser("~/.local/share/xfce4/terminal/"
                                    f"colorschemes/{colorscheme}.theme")
@@ -56,37 +77,21 @@ def chane_xfce4_terminal_colorscheme(colorscheme):
 
     shutil.move(rc_temp, rc_file)
 
-    # compare foreground and background brightness
-    foreground = hex_to_rgb(term_conf['Configuration']['ColorForeground'])
-    background = hex_to_rgb(term_conf['Configuration']['ColorBackground'])
-    if sum(foreground) > sum(background):
-        bg_brightness = 'dark'
-    else:
-        bg_brightness = 'light'
-    return bg_brightness
 
-def change_taskwarrior_colorscheme(colorscheme):
-    """changes colorscheme of taskwarrior
-    ~/.taskrc-colorscheme must be included in .taskrc"""
+def change_taskwarrior_theme(theme):
+    """changes theme of taskwarrior
+    ~/.taskrc-theme must be included in .taskrc"""
 
-    os_file = f"/usr/share/doc/task/rc/{colorscheme}.theme"
-    taskrc_colorscheme_file = os.path.expanduser("~/.taskrc-colorscheme")
+    os_file = f"/usr/share/doc/task/rc/{theme}.theme"
+    taskrc_theme_file = os.path.expanduser("~/.taskrc-theme")
 
     # check if scheme is available
     if not os.path.isfile(os_file):
         raise ValueError(f"file {os_file} not found")
 
-    with open(taskrc_colorscheme_file, 'w') as f:
+    with open(taskrc_theme_file, 'w') as f:
         f.write(f"include {os_file}\n")
 
+
 if __name__ == '__main__':
-    args = parser.parse_args()
-    bg_brightness = chane_xfce4_terminal_colorscheme(args.colorscheme)
-
-    if bg_brightness == 'light':
-        task_colorscheme = 'light-256'
-    elif bg_brightness == 'dark':
-        task_colorscheme = 'dark-256'
-    change_taskwarrior_colorscheme(task_colorscheme)
-
-    time.sleep(0.2)
+    run()
