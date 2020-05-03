@@ -4,6 +4,7 @@ import argparse
 import configparser
 import os
 import shutil
+from string import Template
 import tempfile
 import time
 
@@ -19,13 +20,17 @@ def run():
     # set themes
     args = parser.parse_args()
     if args.brightness == 'light':
+        xfce4_style = 'Adwaita'
         xfce4_terminal_colorscheme = 'marv-light'
         task_theme = 'light-256'
-        xfce4_style = 'Adwaita'
+        polybar_colors = {'background': '#f6f5f4', 'foreground': '#222', 'icon': '#666',
+                          'border_top_color': '#b2aca6'}
     elif args.brightness == 'dark':
+        xfce4_style = 'Adwaita-dark'
         xfce4_terminal_colorscheme = 'marv-dark'
         task_theme = 'dark-256'
-        xfce4_style = 'Adwaita-dark'
+        polybar_colors = {'background': '#353535', 'foreground': '#eee', 'icon': '#888',
+                          'border_top_color': '#252525'}
 
     # change xfce4 style
     change_xfce4_style(xfce4_style)
@@ -35,6 +40,9 @@ def run():
 
     # change taskwarrior theme
     change_taskwarrior_theme(task_theme)
+
+    # change polybar colors
+    change_polybar_colors(polybar_colors)
 
     time.sleep(0.2)
 
@@ -91,6 +99,25 @@ def change_taskwarrior_theme(theme):
 
     with open(taskrc_theme_file, 'w') as f:
         f.write(f"include {os_file}\n")
+
+
+def change_polybar_colors(polybar_colors):
+    """changes colors in .config/polybar/config.pytemplate
+       and saves them to .config/polybar/config."""
+    template_file = os.path.expanduser("~/.config/polybar/config.pytemplate")
+    config_file = os.path.expanduser("~/.polybar-config")
+    random_string = next(tempfile._get_candidate_names())
+    temp_file = os.path.expanduser(f"/tmp/polybar-config-{random_string}")
+    # open template file
+    with open(template_file, 'r') as f:
+        config = f.read()
+    # apply config
+    config = Template(config).substitute(polybar_colors)
+    # write config to temp file
+    with open(temp_file, 'w') as f:
+        f.write(config)
+    # atomic change
+    shutil.move(temp_file, config_file)
 
 
 if __name__ == '__main__':
