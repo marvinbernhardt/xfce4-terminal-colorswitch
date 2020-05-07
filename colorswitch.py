@@ -51,6 +51,8 @@ def change_xfce4_style(style):
     """changes xfce4 style"""
     # does not work with subprocess.run() for some reason
     os.system("xfconf-query -c xsettings -p /Net/ThemeName -s '{}'".format(style))
+    os.system("xfce4-panel -r")
+    os.system("pkill xfwm4")
 
 
 def change_xfce4_terminal_colorscheme(colorscheme):
