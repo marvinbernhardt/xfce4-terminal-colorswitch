@@ -50,7 +50,8 @@ def run():
 def change_xfce4_style(style):
     """changes xfce4 style"""
     # does not work with subprocess.run() for some reason
-    os.system("/usr/bin/xfconf-query -c xsettings -p /Net/ThemeName -s '{}'".format(style))
+    os.system("/usr/bin/xfconf-query -c xsettings -p /Net/ThemeName -s '{}'".format(
+        style))
     os.system("/usr/bin/xfce4-panel -r")
     os.system("/usr/bin/nohup xfwm4 --replace > /tmp/xfwm4-nohup.out &")
 
