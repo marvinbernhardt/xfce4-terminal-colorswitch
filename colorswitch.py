@@ -3,6 +3,7 @@
 import argparse
 import configparser
 import os
+import re
 import shutil
 from string import Template
 import tempfile
@@ -80,21 +81,16 @@ def change_xfce4_terminal_colorscheme(colorscheme):
     else:
         raise ValueError(f"colorscheme {colorscheme} not found")
 
-    term_conf = configparser.ConfigParser(interpolation=None)
-    term_conf.optionxform = str
-    term_conf.read(rc_file)
-
     scheme_conf = configparser.ConfigParser(interpolation=None)
     scheme_conf.optionxform = str
     scheme_conf.read(scheme_file)
     for key, value in dict(scheme_conf["Scheme"]).items():
         if not key.startswith("Name"):
-            term_conf["Configuration"][key] = value
+            property_ = "/" + re.sub(r'(?<!^)(?=[A-Z])', '-', key).lower()
+            os.system(
+                f"/usr/bin/xfconf-query -c xfce4-terminal -p {property_} -s '{value}'"
+            )
 
-    with open(rc_temp, "w") as f:
-        term_conf.write(f, space_around_delimiters=False)
-
-    shutil.move(rc_temp, rc_file)
 
 
 def change_polybar_colors(polybar_colors):
