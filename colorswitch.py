@@ -86,11 +86,10 @@ def change_xfce4_terminal_colorscheme(colorscheme):
     scheme_conf.read(scheme_file)
     for key, value in dict(scheme_conf["Scheme"]).items():
         if not key.startswith("Name"):
-            property_ = "/" + re.sub(r'(?<!^)(?=[A-Z])', '-', key).lower()
+            property_ = "/" + re.sub(r"(?<!^)(?=[A-Z])", "-", key).lower()
             os.system(
                 f"/usr/bin/xfconf-query -c xfce4-terminal -p {property_} -s '{value}'"
             )
-
 
 
 def change_polybar_colors(polybar_colors):
